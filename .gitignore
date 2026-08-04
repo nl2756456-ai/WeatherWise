@@ -1,0 +1,21 @@
+# Secrets - never commit these
+.env
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+venv/
+.venv/
+
+# App-generated data (keep the folder, ignore the runtime contents)
+data/cache/*
+!data/cache/.gitkeep
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Editor files
+.vscode/
+.idea/
