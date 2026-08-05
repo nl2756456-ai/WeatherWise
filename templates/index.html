@@ -1,0 +1,201 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>WeatherWise</title>
+
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.7/dist/css/bootstrap.min.css" rel="stylesheet">
+
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+
+<body class="{{ weather.description if weather else '' }}">
+
+<nav class="navbar navbar-dark bg-dark px-4">
+
+    <span class="navbar-brand fs-3">
+        🌤️ WeatherWise
+    </span>
+
+    <form class="d-flex" method="POST">
+
+        <input
+            class="form-control me-2"
+            type="text"
+            name="city"
+            placeholder="Search city..."
+            required>
+
+        <button
+            class="btn btn-warning me-2"
+            type="submit">
+            🔍 Search
+        </button>
+
+        <button
+            type="button"
+            class="btn btn-info"
+            onclick="getLocation()">
+            📍 My Location
+        </button>
+
+    </form>
+
+</nav>
+
+<div class="container mt-5">
+
+<div class="row">
+
+<div class="col-lg-5">
+
+{% if weather %}
+
+<div class="weather-card text-center">
+
+<img
+src="https://openweathermap.org/img/wn/{{ weather.icon_code }}@4x.png">
+
+<h1>{{ weather.temperature|round }}°C</h1>
+
+<h3>{{ weather.location.city }}, {{ weather.location.country }}</h3>
+
+<h4 class="text-capitalize">
+{{ weather.description }}
+</h4>
+
+<hr>
+
+<div class="row text-center">
+
+<div class="col">
+<div class="info-box">
+💧
+<p>Humidity</p>
+<h5>{{ weather.humidity }}%</h5>
+</div>
+</div>
+
+<div class="col">
+<div class="info-box">
+🌬️
+<p>Wind Speed</p>
+<h5>{{ weather.wind_speed }} m/s</h5>
+</div>
+</div>
+
+<div class="col">
+<div class="info-box">
+👁️
+<p>Visibility</p>
+<h5>{{ (weather.visibility/1000)|round }} km</h5>
+</div>
+</div>
+
+</div>
+
+<div class="row text-center mt-4">
+
+<div class="col">
+<div class="info-box">
+🌡️
+<p>Feels Like</p>
+<h5>{{ weather.feels_like|round }}°C</h5>
+</div>
+</div>
+
+<div class="col">
+<div class="info-box">
+🧭
+<p>Pressure</p>
+<h5>{{ weather.pressure }} hPa</h5>
+</div>
+</div>
+
+</div>
+
+<hr>
+
+<h4>🌅 Sun Information</h4>
+
+<div class="row text-center mt-3">
+
+<div class="col">
+☀️
+<p>Sunrise</p>
+<h5>{{ weather.sunrise.strftime("%I:%M %p") }}</h5>
+</div>
+
+<div class="col">
+🌇
+<p>Sunset</p>
+<h5>{{ weather.sunset.strftime("%I:%M %p") }}</h5>
+</div>
+
+</div>
+
+</div>
+
+{% endif %}
+
+</div>
+
+<div class="col-lg-7">
+{% if forecast %}
+
+<div class="forecast-card">
+
+    <h2 class="mb-4">📅 5-Day Forecast</h2>
+
+    <div class="forecast-grid">
+
+        {% for day in forecast %}
+
+        <div class="day-card">
+
+            <h5>{{ day.date.strftime("%A") }}</h5>
+
+            <img src="https://openweathermap.org/img/wn/{{ day.icon }}@2x.png">
+
+            <p class="text-capitalize">
+                {{ day.description }}
+            </p>
+
+            <strong>
+                {{ day.temp_max|round }}°C
+            </strong>
+
+            <br>
+
+            <small>
+                Low {{ day.temp_min|round }}°C
+            </small>
+
+            <br>
+
+            <small>
+                🌧️ {{ day["pop"]|round }}%
+            </small>
+
+        </div>
+
+        {% endfor %}
+
+    </div>
+
+</div>
+
+{% endif %}
+
+</div>
+
+</div>
+
+</div>
+
+<script src="{{ url_for('static', filename='script.js') }}"></script>
+
+</body>
+</html>    
