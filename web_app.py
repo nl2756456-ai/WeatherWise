@@ -3,14 +3,21 @@ from weather_api import WeatherAPI, WeatherAPIError
 
 app = Flask(__name__)
 weather_api = WeatherAPI()
+recent_searches = []
+
+def format_hourly_data(hourly):
+    return [
+        {"time": h["time"].strftime("%I %p"), "temp": h["temp"]}
+        for h in hourly
+    ] if hourly else []
 
 
 @app.route("/", methods=["GET", "POST"])
 def home():
-    aqi = None
-
     weather = None
     forecast = None
+    hourly = None
+    aqi = None
     error = None
 
     if request.method == "POST":
@@ -18,26 +25,42 @@ def home():
 
         try:
             weather = weather_api.get_current_weather(city=city)
+            if weather.location.city not in recent_searches:
+                recent_searches.insert(0, weather.location.city)
 
+            recent_searches[:] = recent_searches[:5]
             forecast = weather_api.get_daily_forecast_from_3h(
                 weather.location.latitude,
                 weather.location.longitude
             )
 
+            hourly = weather_api.get_hourly_forecast(
+                weather.location.latitude,
+                weather.location.longitude
+            )
+
+            aqi = weather_api.get_air_quality(
+                weather.location.latitude,
+                weather.location.longitude
+            )
         except WeatherAPIError as e:
             error = str(e)
+
+    hourly_data = format_hourly_data(hourly)
 
     return render_template(
         "index.html",
         weather=weather,
         forecast=forecast,
+        hourly=hourly,
+        hourly_data=hourly_data,
+        aqi=aqi,
         error=error
     )
 
 
 @app.route("/location")
 def location():
-
     lat = request.args.get("lat")
     lon = request.args.get("lon")
 
@@ -50,18 +73,28 @@ def location():
         float(lat),
         float(lon)
     )
+
+    hourly = weather_api.get_hourly_forecast(
+        float(lat),
+        float(lon)
+    )
+
     aqi = weather_api.get_air_quality(
-    weather.location.latitude,
-    weather.location.longitude
-)
+        float(lat),
+        float(lon)
+    )
+
+    hourly_data = format_hourly_data(hourly)
 
     return render_template(
-    "index.html",
-    weather=weather,
-    forecast=forecast,
-    aqi=aqi,
-    error=error
-)
+        "index.html",
+        weather=weather,
+        forecast=forecast,
+        hourly=hourly,
+        hourly_data=hourly_data,
+        aqi=aqi,
+        error=None
+    )
 
 
 if __name__ == "__main__":

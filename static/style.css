@@ -1,9 +1,13 @@
 /* ===== General Page ===== */
 body{
     min-height:100vh;
+    margin:0;
+    font-family:Arial,sans-serif;
     background:linear-gradient(135deg,#4facfe,#00f2fe);
     background-size:cover;
-    transition:1s;
+    background-position:center;
+    background-repeat:no-repeat;
+    transition:background 0.8s ease;
 }
 
 .container{
@@ -223,7 +227,7 @@ small{
 }
 
 .drizzle{
-    background:linear-gradient(135deg,#5c7cfa,#748ffc);
+    background:linear-gradient(135deg,#5a79f7,#748ffc);
 }
 
 .thunderstorm{
@@ -238,4 +242,31 @@ small{
 .fog,
 .haze{
     background:linear-gradient(135deg,#bdc3c7,#2c3e50);
+}
+.clear-sky{
+    background:linear-gradient(135deg,#56CCF2,#2F80ED);
+}
+
+.clouds{
+    background:linear-gradient(135deg,#757F9A,#D7DDE8);
+}
+
+.rain{
+    background:linear-gradient(135deg,#314755,#26a0da);
+}
+
+.thunderstorm{
+    background:linear-gradient(135deg,#232526,#414345);
+}
+
+.snow{
+    background:linear-gradient(135deg,#E6DADA,#274046);
+}
+
+.mist{
+    background:linear-gradient(135deg,#bdc3c7,#2c3e50);
+}
+
+.night{
+    background:linear-gradient(135deg,#0F2027,#203A43,#2C5364);
 }

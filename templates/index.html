@@ -11,7 +11,7 @@
     <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
 </head>
 
-<body class="{{ weather.description if weather else '' }}">
+<body{% if weather %} class="{% if weather.icon_code[-1] == 'n' %}night{% elif 'clear' in weather.description %}clear-sky{% elif 'cloud' in weather.description %}clouds{% elif 'rain' in weather.description %}rain{% elif 'thunderstorm' in weather.description %}thunderstorm{% elif 'snow' in weather.description %}snow{% elif 'mist' in weather.description or 'fog' in weather.description %}mist{% endif %}"{% endif %}>
 
 <nav class="navbar navbar-dark bg-dark px-4">
 
@@ -42,14 +42,71 @@
         </button>
 
     </form>
+<div class="card mt-4 shadow" id="favoritesCard" style="display:none;">
 
+    <div class="card-body">
+
+        <h5>⭐ Favorite Cities</h5>
+
+        <div id="favoriteCities"></div>
+
+    </div>
+
+</div>
 </nav>
+{% if error %}
+<div class="container mt-5">
+    <div class="row justify-content-center">
+        <div class="col-md-6">
+            <div class="alert alert-danger text-center shadow-lg">
+                <h4>❌ City Not Found</h4>
+                <p class="mb-0">
+                    We couldn't find "<strong>{{ request.form.city }}</strong>".
+                    Please check the spelling and try again.
+                </p>
+            </div>
+        </div>
+    </div>
+</div>
+{% endif %}
 
 <div class="container mt-5">
 
 <div class="row">
 
 <div class="col-lg-5">
+{% if recent_searches %}
+
+<div class="card mt-4 mb-4 shadow">
+    <div class="card-body">
+
+        <h5>🕘 Recent Searches</h5>
+
+        {% for city in recent_searches %}
+
+            <form method="POST" class="d-inline">
+
+                <input
+                    type="hidden"
+                    name="city"
+                    value="{{ city }}">
+
+                <button
+                    type="submit"
+                    class="btn btn-outline-primary btn-sm m-1">
+
+                    {{ city }}
+
+                </button>
+
+            </form>
+
+        {% endfor %}
+
+    </div>
+</div>
+
+{% endif %}
 
 {% if weather %}
 
@@ -58,10 +115,21 @@
 <img
 src="https://openweathermap.org/img/wn/{{ weather.icon_code }}@4x.png">
 
-<h1>{{ weather.temperature|round }}°C</h1>
+<h1>
+    <span id="temperature">{{ weather.temperature|round }}</span>°<span id="unit">C</span>
+</h1>
+
+<button id="unitToggle" class="btn btn-outline-light btn-sm mt-2">
+    °C / °F
+</button>
 
 <h3>{{ weather.location.city }}, {{ weather.location.country }}</h3>
-
+<button
+    id="favoriteBtn"
+    class="btn btn-warning mt-3"
+    data-city="{{ weather.location.city }}">
+    ⭐ Add to Favorites
+</button>
 <h4 class="text-capitalize">
 {{ weather.description }}
 </h4>
@@ -115,7 +183,40 @@ src="https://openweathermap.org/img/wn/{{ weather.icon_code }}@4x.png">
 </div>
 
 </div>
+<div class="row text-center mt-4">
 
+    <div class="col">
+    <div class="info-box">
+        🌿
+        <p>Air Quality</p>
+
+        {% if aqi %}
+            {% if aqi.aqi == 1 %}
+    <h5 class="text-success">🟢 Good</h5>
+
+{% elif aqi.aqi == 2 %}
+    <h5 class="text-info">🔵 Fair</h5>
+
+{% elif aqi.aqi == 3 %}
+    <h5 class="text-warning">🟡 Moderate</h5>
+
+{% elif aqi.aqi == 4 %}
+    <h5 class="text-danger">🔴 Poor</h5>
+
+{% elif aqi.aqi == 5 %}
+    <h5 class="text-danger">⚫ Very Poor</h5>
+
+{% else %}
+    <h5>N/A</h5>
+{% endif %}
+        {% else %}
+            <h5>N/A</h5>
+        {% endif %}
+
+    </div>
+</div>
+
+</div>
 <hr>
 
 <h4>🌅 Sun Information</h4>
@@ -164,14 +265,21 @@ src="https://openweathermap.org/img/wn/{{ weather.icon_code }}@4x.png">
             </p>
 
             <strong>
-                {{ day.temp_max|round }}°C
-            </strong>
+    <span class="forecast-max"
+          data-celsius="{{ day.temp_max }}">
+        {{ day.temp_max|round }}
+    </span>°C
+</strong>
 
-            <br>
+<br>
 
-            <small>
-                Low {{ day.temp_min|round }}°C
-            </small>
+<small>
+    Low
+    <span class="forecast-min"
+          data-celsius="{{ day.temp_min }}">
+        {{ day.temp_min|round }}
+    </span>°C
+</small>
 
             <br>
 
@@ -188,6 +296,26 @@ src="https://openweathermap.org/img/wn/{{ weather.icon_code }}@4x.png">
 </div>
 
 {% endif %}
+<div class="forecast-card mt-4">
+
+    <h2 class="mb-4">📈 Hourly Temperature</h2>
+
+    <canvas id="hourlyChart"></canvas>
+
+</div>
+
+<script>
+const hourlyData = [
+{% if hourly %}
+    {% for hour in hourly %}
+    {
+        time: "{{ hour.time.strftime('%I %p') }}",
+        temp: {{ hour.temp }}
+    },
+    {% endfor %}
+{% endif %}
+];
+</script>
 
 </div>
 
@@ -196,6 +324,7 @@ src="https://openweathermap.org/img/wn/{{ weather.icon_code }}@4x.png">
 </div>
 
 <script src="{{ url_for('static', filename='script.js') }}"></script>
-
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script src="{{ url_for('static', filename='chart.js') }}"></script>
 </body>
 </html>    
