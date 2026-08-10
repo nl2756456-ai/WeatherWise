@@ -1,13 +1,69 @@
 /* ===== General Page ===== */
-body{
-    min-height:100vh;
-    margin:0;
-    font-family:Arial,sans-serif;
-    background:linear-gradient(135deg,#4facfe,#00f2fe);
-    background-size:cover;
-    background-position:center;
-    background-repeat:no-repeat;
-    transition:background 0.8s ease;
+body {
+    min-height: 100vh;
+    margin: 0;
+    font-family: Arial, sans-serif;
+
+    background: linear-gradient(
+        135deg,
+        #4facfe,
+        #00f2fe
+    );
+
+    background-size: cover;
+    background-position: center;
+    background-repeat: no-repeat;
+
+    transition: background 0.8s ease;
+}
+
+
+* ===========================
+   Weather Backgrounds
+   =========================== */
+
+body.clear-sky {
+    background: linear-gradient(
+        135deg,
+        #56ccf2,
+        #2f80ed
+    );
+}
+
+
+body.clouds {
+    background: linear-gradient(
+        135deg,
+        #757f9a,
+        #d7dde8
+    );
+}
+
+
+body.rain {
+    background: linear-gradient(
+        135deg,
+        #314755,
+        #26a0da
+    );
+}
+
+
+body.thunderstorm {
+    background: linear-gradient(
+        135deg,
+        #232526,
+        #414345
+    );
+}
+
+
+body.snow {
+    background: linear-gradient(
+        135deg,
+        #e6dada,
+        #274046
+    );
 }
 
 .container{
