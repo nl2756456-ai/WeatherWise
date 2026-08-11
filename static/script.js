@@ -1,16 +1,26 @@
-// ===========================
-// My Location
-// ===========================
+/* =====================================================
+   WEATHERWISE JAVASCRIPT
+===================================================== */
+
+
+/* =========================
+   MY LOCATION
+========================= */
 
 function getLocation() {
 
     if (navigator.geolocation) {
 
-        navigator.geolocation.getCurrentPosition(showPosition);
+        navigator.geolocation.getCurrentPosition(
+            showPosition,
+            showLocationError
+        );
 
     } else {
 
-        alert("Geolocation is not supported.");
+        alert(
+            "Geolocation is not supported by your browser."
+        );
 
     }
 
@@ -19,150 +29,72 @@ function getLocation() {
 
 function showPosition(position) {
 
-    const lat = position.coords.latitude;
-    const lon = position.coords.longitude;
+    const lat =
+        position.coords.latitude;
+
+    const lon =
+        position.coords.longitude;
 
     window.location =
-        "/location?lat=" + lat + "&lon=" + lon;
-}
-
-
-// ===========================
-// Favorite Cities
-// ===========================
-
-const favoriteBtn =
-    document.getElementById("favoriteBtn");
-
-
-function loadFavorites() {
-
-    const favorites =
-        JSON.parse(localStorage.getItem("favorites")) || [];
-
-    const container =
-        document.getElementById("favoriteCities");
-
-    const card =
-        document.getElementById("favoritesCard");
-
-    if (!container || !card) {
-        return;
-    }
-
-    container.innerHTML = "";
-
-    if (favorites.length === 0) {
-
-        card.style.display = "none";
-        return;
-
-    }
-
-    card.style.display = "block";
-
-
-    favorites.forEach(function(city) {
-
-        const wrapper =
-            document.createElement("div");
-
-        wrapper.className =
-            "d-inline-block m-1";
-
-
-        const button =
-            document.createElement("button");
-
-        button.className =
-            "btn btn-warning btn-sm";
-
-        button.innerHTML =
-            "⭐ " + city;
-
-
-        button.onclick = function() {
-
-            const input =
-                document.querySelector(
-                    'input[name="city"]'
-                );
-
-            if (input) {
-
-                input.value = city;
-
-                input.closest("form").submit();
-
-            }
-
-        };
-
-
-        const remove =
-            document.createElement("button");
-
-        remove.className =
-            "btn btn-danger btn-sm ms-1";
-
-        remove.innerHTML =
-            "❌";
-
-
-        remove.onclick = function() {
-
-            let list =
-                JSON.parse(
-                    localStorage.getItem("favorites")
-                ) || [];
-
-
-            list = list.filter(function(item) {
-
-                return item !== city;
-
-            });
-
-
-            localStorage.setItem(
-                "favorites",
-                JSON.stringify(list)
-            );
-
-
-            loadFavorites();
-            updateFavoriteButton();
-
-        };
-
-
-        wrapper.appendChild(button);
-        wrapper.appendChild(remove);
-
-        container.appendChild(wrapper);
-
-    });
+        "/location?lat=" +
+        lat +
+        "&lon=" +
+        lon;
 
 }
 
 
-// ===========================
-// Favorite Button
-// ===========================
+function showLocationError(error) {
+
+    alert(
+        "Unable to get your location."
+    );
+
+}
+
+
+/* =========================
+   FAVORITES
+========================= */
+
+function getFavorites() {
+
+    try {
+
+        return JSON.parse(
+            localStorage.getItem("favorites")
+        ) || [];
+
+    } catch (error) {
+
+        return [];
+
+    }
+
+}
+
+
+/* =========================
+   UPDATE FAVORITE BUTTON
+========================= */
 
 function updateFavoriteButton() {
+
+    const favoriteBtn =
+        document.getElementById(
+            "favoriteBtn"
+        );
 
     if (!favoriteBtn) {
         return;
     }
 
+
     const city =
         favoriteBtn.dataset.city;
 
     const favorites =
-        JSON.parse(
-            localStorage.getItem("favorites")
-        ) || [];
+        getFavorites();
 
 
     if (favorites.includes(city)) {
@@ -196,28 +128,34 @@ function updateFavoriteButton() {
 }
 
 
+/* =========================
+   FAVORITE BUTTON
+========================= */
+
+const favoriteBtn =
+    document.getElementById(
+        "favoriteBtn"
+    );
+
+
 if (favoriteBtn) {
 
     favoriteBtn.addEventListener(
         "click",
-        function() {
+        function () {
 
             const city =
                 favoriteBtn.dataset.city;
 
             let favorites =
-                JSON.parse(
-                    localStorage.getItem("favorites")
-                ) || [];
+                getFavorites();
 
 
             if (favorites.includes(city)) {
 
                 favorites =
                     favorites.filter(
-                        function(item) {
-                            return item !== city;
-                        }
+                        item => item !== city
                     );
 
             } else {
@@ -233,8 +171,167 @@ if (favoriteBtn) {
             );
 
 
-            loadFavorites();
             updateFavoriteButton();
+
+            loadFavorites();
+
+        }
+    );
+
+
+    updateFavoriteButton();
+
+}
+
+
+/* =========================
+   LOAD FAVORITES
+========================= */
+
+function loadFavorites() {
+
+    const container =
+        document.getElementById(
+            "favoriteCities"
+        );
+
+    const card =
+        document.getElementById(
+            "favoritesCard"
+        );
+
+
+    if (!container || !card) {
+        return;
+    }
+
+
+    const favorites =
+        getFavorites();
+
+
+    container.innerHTML = "";
+
+
+    if (favorites.length === 0) {
+
+        card.style.display = "none";
+
+        return;
+
+    }
+
+
+    card.style.display = "block";
+
+
+    favorites.forEach(
+        function (city) {
+
+            const wrapper =
+                document.createElement(
+                    "div"
+                );
+
+            wrapper.className =
+                "d-inline-block m-1";
+
+
+            /* Search button */
+
+            const button =
+                document.createElement(
+                    "button"
+                );
+
+            button.className =
+                "btn btn-warning btn-sm";
+
+            button.textContent =
+                "⭐ " + city;
+
+
+            button.addEventListener(
+                "click",
+                function () {
+
+                    const searchInput =
+                        document.querySelector(
+                            'input[name="city"]'
+                        );
+
+
+                    const searchForm =
+                        searchInput
+                            ? searchInput.closest(
+                                "form"
+                            )
+                            : null;
+
+
+                    if (
+                        searchInput &&
+                        searchForm
+                    ) {
+
+                        searchInput.value =
+                            city;
+
+                        searchForm.submit();
+
+                    }
+
+                }
+            );
+
+
+            /* Remove button */
+
+            const remove =
+                document.createElement(
+                    "button"
+                );
+
+            remove.className =
+                "btn btn-danger btn-sm ms-1";
+
+            remove.textContent =
+                "❌";
+
+
+            remove.addEventListener(
+                "click",
+                function () {
+
+                    let list =
+                        getFavorites();
+
+
+                    list =
+                        list.filter(
+                            item => item !== city
+                        );
+
+
+                    localStorage.setItem(
+                        "favorites",
+                        JSON.stringify(list)
+                    );
+
+
+                    loadFavorites();
+
+                    updateFavoriteButton();
+
+                }
+            );
+
+
+            wrapper.appendChild(button);
+
+            wrapper.appendChild(remove);
+
+            container.appendChild(wrapper);
 
         }
     );
@@ -242,39 +339,64 @@ if (favoriteBtn) {
 }
 
 
+/* Load favorites */
+
 loadFavorites();
-updateFavoriteButton();
-// ===========================
-// Temperature Unit Toggle
-// ===========================
+
+
+/* =========================
+   TEMPERATURE UNIT
+========================= */
 
 const temperatureElement =
-    document.getElementById("temperature");
+    document.getElementById(
+        "temperature"
+    );
+
 
 const unitElement =
-    document.getElementById("unit");
+    document.getElementById(
+        "unit"
+    );
+
 
 const unitToggle =
-    document.getElementById("unitToggle");
+    document.getElementById(
+        "unitToggle"
+    );
 
 
-if (temperatureElement && unitElement && unitToggle) {
+if (
+    temperatureElement &&
+    unitElement &&
+    unitToggle
+) {
+
 
     const celsius =
-        parseFloat(temperatureElement.textContent);
+        parseFloat(
+            temperatureElement.textContent
+        );
+
 
     let isCelsius =
-        localStorage.getItem("temperatureUnit") !== "F";
+        localStorage.getItem(
+            "temperatureUnit"
+        ) !== "F";
 
 
     function updateTemperature() {
+
+
+        /* Main temperature */
 
         if (isCelsius) {
 
             temperatureElement.textContent =
                 Math.round(celsius);
 
-            unitElement.textContent = "C";
+            unitElement.textContent =
+                "C";
 
         } else {
 
@@ -284,66 +406,199 @@ if (temperatureElement && unitElement && unitToggle) {
             temperatureElement.textContent =
                 Math.round(fahrenheit);
 
-            unitElement.textContent = "F";
+            unitElement.textContent =
+                "F";
+
+        }
+
+
+        /* Forecast maximum */
+
+        document
+            .querySelectorAll(
+                ".forecast-max"
+            )
+            .forEach(
+                function (element) {
+
+                    const temp =
+                        parseFloat(
+                            element.dataset.celsius
+                        );
+
+
+                    if (isCelsius) {
+
+                        element.textContent =
+                            Math.round(temp);
+
+                    } else {
+
+                        element.textContent =
+                            Math.round(
+                                (temp * 9 / 5) + 32
+                            );
+
+                    }
+
+                }
+            );
+
+
+        /* Forecast minimum */
+
+        document
+            .querySelectorAll(
+                ".forecast-min"
+            )
+            .forEach(
+                function (element) {
+
+                    const temp =
+                        parseFloat(
+                            element.dataset.celsius
+                        );
+
+
+                    if (isCelsius) {
+
+                        element.textContent =
+                            Math.round(temp);
+
+                    } else {
+
+                        element.textContent =
+                            Math.round(
+                                (temp * 9 / 5) + 32
+                            );
+
+                    }
+
+                }
+            );
+
+
+        /* Forecast units */
+
+        document
+            .querySelectorAll(
+                ".day-card strong"
+            )
+            .forEach(
+                function (element) {
+
+                    element.innerHTML =
+                        element.innerHTML.replace(
+                            /°[CF]/g,
+                            isCelsius
+                                ? "°C"
+                                : "°F"
+                        );
+
+                }
+            );
+
+
+        document
+            .querySelectorAll(
+                ".day-card small"
+            )
+            .forEach(
+                function (element) {
+
+                    element.innerHTML =
+                        element.innerHTML.replace(
+                            /°[CF]/g,
+                            isCelsius
+                                ? "°C"
+                                : "°F"
+                        );
+
+                }
+            );
+
+
+        /* Hourly chart */
+
+        if (
+            window.hourlyChart &&
+            Array.isArray(
+                window.hourlyTemperatures
+            )
+        ) {
+
+            if (isCelsius) {
+
+                window.hourlyChart
+                    .data
+                    .datasets[0]
+                    .data =
+                    window.hourlyTemperatures;
+
+                window.hourlyChart
+                    .data
+                    .datasets[0]
+                    .label =
+                    "Temperature (°C)";
+
+            } else {
+
+                window.hourlyChart
+                    .data
+                    .datasets[0]
+                    .data =
+                    window.hourlyTemperatures.map(
+                        function (temp) {
+
+                            return (
+                                temp * 9 / 5
+                            ) + 32;
+
+                        }
+                    );
+
+                window.hourlyChart
+                    .data
+                    .datasets[0]
+                    .label =
+                    "Temperature (°F)";
+
+            }
+
+
+            window.hourlyChart.update();
+
         }
 
     }
 
+
+    /* Toggle button */
 
     unitToggle.addEventListener(
         "click",
         function () {
 
-            isCelsius = !isCelsius;
+            isCelsius =
+                !isCelsius;
+
 
             localStorage.setItem(
                 "temperatureUnit",
-                isCelsius ? "C" : "F"
+                isCelsius
+                    ? "C"
+                    : "F"
             );
 
+
             updateTemperature();
-            updateHourlyChart();
 
         }
     );
 
 
+    /* Initial */
+
     updateTemperature();
 
-}
-// ===========================
-// Hourly Chart Temperature Unit
-// ===========================
-
-function updateHourlyChart() {
-
-    if (!window.hourlyChart || !window.hourlyTemperatures) {
-        return;
-    }
-
-    const isCelsius =
-        localStorage.getItem("temperatureUnit") !== "F";
-
-    if (isCelsius) {
-
-        window.hourlyChart.data.datasets[0].data =
-            window.hourlyTemperatures;
-
-        window.hourlyChart.data.datasets[0].label =
-            "Temperature (°C)";
-
-    } else {
-
-        window.hourlyChart.data.datasets[0].data =
-            window.hourlyTemperatures.map(function(temp) {
-
-                return (temp * 9 / 5) + 32;
-
-            });
-
-        window.hourlyChart.data.datasets[0].label =
-            "Temperature (°F)";
-    }
-
-    window.hourlyChart.update();
 }
