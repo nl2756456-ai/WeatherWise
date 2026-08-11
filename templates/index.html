@@ -1,703 +1,235 @@
 <!DOCTYPE html>
 <html lang="en">
-
 <head>
-
     <meta charset="UTF-8">
-
-    <meta
-        name="viewport"
-        content="width=device-width, initial-scale=1.0">
-
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>WeatherWise</title>
 
-    <!-- Bootstrap -->
-    <link
-        href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.7/dist/css/bootstrap.min.css"
-        rel="stylesheet">
-
-    <!-- Our CSS -->
-    <link
-        rel="stylesheet"
-        href="{{ url_for('static', filename='style.css') }}">
-
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.7/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
 </head>
 
+<body{% if weather %} class="{% if weather.icon_code[-1] == 'n' %}night{% elif 'clear' in weather.description|lower %}clear-sky{% elif 'cloud' in weather.description|lower %}clouds{% elif 'rain' in weather.description|lower or 'drizzle' in weather.description|lower %}rain{% elif 'thunderstorm' in weather.description|lower %}thunderstorm{% elif 'snow' in weather.description|lower %}snow{% elif 'mist' in weather.description|lower or 'fog' in weather.description|lower or 'haze' in weather.description|lower %}mist{% endif %}"{% endif %}>
 
-<body
-{% if weather %}
-class="{% if weather.icon_code[-1] == 'n' %}
-night
-{% elif 'clear' in weather.description %}
-clear-sky
-{% elif 'cloud' in weather.description %}
-clouds
-{% elif 'rain' in weather.description %}
-rain
-{% elif 'thunderstorm' in weather.description %}
-thunderstorm
-{% elif 'snow' in weather.description %}
-snow
-{% elif 'mist' in weather.description or 'fog' in weather.description %}
-mist
-{% endif %}"
-{% endif %}
->
+<nav class="navbar navbar-dark bg-dark px-4 py-3">
+    <span class="navbar-brand fs-3">🌤️ WeatherWise</span>
 
-
-<!-- =========================
-     NAVBAR
-========================= -->
-
-<nav class="navbar navbar-dark bg-dark px-4">
-
-    <span class="navbar-brand fs-3">
-        🌤️ WeatherWise
-    </span>
-
-    <form
-        class="d-flex search-form"
-        method="POST">
-
+    <form class="d-flex" method="POST" action="{{ url_for('home') }}">
         <input
             class="form-control me-2"
             type="text"
             name="city"
             placeholder="Search city..."
+            value="{{ request.form.get('city', '') }}"
             required>
 
-        <button
-            class="btn btn-warning me-2"
-            type="submit">
+        <button class="btn btn-warning me-2" type="submit">🔍 Search</button>
 
-            🔍 Search
-
-        </button>
-
-        <button
-            type="button"
-            class="btn btn-info"
-            onclick="getLocation()">
-
-            📍 My Location
-
-        </button>
-
+        <button type="button" class="btn btn-info" onclick="getLocation()">📍 My Location</button>
     </form>
-
 </nav>
 
-
-<!-- =========================
-     ERROR
-========================= -->
-
 {% if error %}
+<div class="container mt-4">
+    <div class="alert alert-danger text-center shadow">
+        <strong>❌ {{ error }}</strong>
+    </div>
+</div>
+{% endif %}
 
 <div class="container mt-4">
 
-    <div class="alert alert-danger text-center">
-
-        <h4>
-            ❌ City Not Found
-        </h4>
-
-        <p class="mb-0">
-
-            We couldn't find that city.
-
-            Please check the spelling and try again.
-
-        </p>
-
-    </div>
-
+{% if not weather %}
+<div class="text-center text-white py-5">
+    <div style="font-size:90px;">🌤️</div>
+    <h1 class="display-4 fw-bold">Welcome to WeatherWise</h1>
+    <p class="lead">Search for a city to see the latest weather information.</p>
+    <p>🔎 Enter a city above to get started</p>
 </div>
-
 {% endif %}
 
+{% if weather %}
+<div class="row g-4">
 
-<!-- =========================
-     MAIN CONTAINER
-========================= -->
+    <!-- Current weather -->
+    <div class="col-lg-5">
+        
+        <div class="weather-card">
+            <img
+                src="https://openweathermap.org/img/wn/{{ weather.icon_code }}@4x.png"
+                alt="Weather icon">
 
-<div class="container main-container">
+            <h1>
+                <span id="temperature">{{ weather.temperature|round }}</span>°<span id="unit">C</span>
+            </h1>
 
-    <div class="row g-4">
+            <button id="unitToggle" class="btn btn-outline-light btn-sm">°C / °F</button>
+            
 
+            <h3>{{ weather.location.city }}, {{ weather.location.country }}</h3>
 
-        <!-- =========================
-             LEFT COLUMN
-        ========================= -->
+            <button
+                id="favoriteBtn"
+                class="btn btn-warning mt-3"
+                data-city="{{ weather.location.city }}">
+                ⭐ Add to Favorites
+            </button>
 
-        <div class="col-lg-5">
+            <h4 class="text-capitalize mt-3">{{ weather.description }}</h4>
+            <hr>
 
-
-            <!-- RECENT SEARCHES -->
-
-            {% if recent_searches %}
-
-            <div class="glass-card recent-card">
-
-                <h5>
-                    🕘 Recent Searches
-                </h5>
-
-                <div>
-
-                    {% for city in recent_searches %}
-
-                    <form
-                        method="POST"
-                        class="d-inline">
-
-                        <input
-                            type="hidden"
-                            name="city"
-                            value="{{ city }}">
-
-                        <button
-                            type="submit"
-                            class="btn btn-outline-light btn-sm m-1">
-
-                            {{ city }}
-
-                        </button>
-
-                    </form>
-
-                    {% endfor %}
-
+            <div class="row g-3 text-center">
+                <div class="col-6">
+                    <div class="info-box">
+                        <div>💧</div>
+                        <p>Humidity</p>
+                        <h5>{{ weather.humidity }}%</h5>
+                    </div>
                 </div>
 
-            </div>
-
-            {% endif %}
-
-
-            <!-- FAVORITES -->
-
-            <div
-                id="favoritesCard"
-                class="glass-card favorites-card">
-
-                <h5>
-                    ⭐ Favorite Cities
-                </h5>
-
-                <div id="favoriteCities"></div>
-
-            </div>
-
-
-            <!-- WEATHER CARD -->
-
-            {% if weather %}
-
-            <div class="weather-card">
-
-
-                <!-- Weather icon -->
-
-                <img
-                    src="https://openweathermap.org/img/wn/{{ weather.icon_code }}@4x.png"
-                    alt="Weather icon">
-
-
-                <!-- Temperature -->
-
-                <h1>
-
-                    <span id="temperature">
-                        {{ weather.temperature|round }}
-                    </span>
-
-                    °<span id="unit">C</span>
-
-                </h1>
-
-
-                <!-- Unit toggle -->
-
-                <button
-                    id="unitToggle"
-                    class="btn btn-outline-light btn-sm">
-
-                    °C / °F
-
-                </button>
-
-
-                <!-- City -->
-
-                <h3>
-
-                    {{ weather.location.city }},
-                    {{ weather.location.country }}
-
-                </h3>
-
-
-                <!-- Favorite -->
-
-                <button
-                    id="favoriteBtn"
-                    class="btn btn-warning mt-3"
-                    data-city="{{ weather.location.city }}">
-
-                    ⭐ Add to Favorites
-
-                </button>
-
-
-                <!-- Description -->
-
-                <h4 class="text-capitalize">
-
-                    {{ weather.description }}
-
-                </h4>
-
-
-                <hr>
-
-
-                <!-- WEATHER INFORMATION -->
-
-                <div class="row g-3 text-center">
-
-
-                    <div class="col-4">
-
-                        <div class="info-box">
-
-                            <div class="info-icon">
-                                💧
-                            </div>
-
-                            <p>
-                                Humidity
-                            </p>
-
-                            <h5>
-                                {{ weather.humidity }}%
-                            </h5>
-
-                        </div>
-
+                <div class="col-6">
+                    <div class="info-box">
+                        <div>🌬️</div>
+                        <p>Wind Speed</p>
+                        <h5>{{ weather.wind_speed }} m/s</h5>
                     </div>
-
-
-                    <div class="col-4">
-
-                        <div class="info-box">
-
-                            <div class="info-icon">
-                                🌬️
-                            </div>
-
-                            <p>
-                                Wind
-                            </p>
-
-                            <h5>
-                                {{ weather.wind_speed }}
-                                m/s
-                            </h5>
-
-                        </div>
-
-                    </div>
-
-
-                    <div class="col-4">
-
-                        <div class="info-box">
-
-                            <div class="info-icon">
-                                👁️
-                            </div>
-
-                            <p>
-                                Visibility
-                            </p>
-
-                            <h5>
-                                {{ (weather.visibility / 1000)|round }}
-                                km
-                            </h5>
-
-                        </div>
-
-                    </div>
-
-
                 </div>
 
-
-                <div class="row g-3 text-center mt-1">
-
-
-                    <div class="col-6">
-
-                        <div class="info-box">
-
-                            <div class="info-icon">
-                                🌡️
-                            </div>
-
-                            <p>
-                                Feels Like
-                            </p>
-
-                            <h5>
-                                {{ weather.feels_like|round }}°C
-                            </h5>
-
-                        </div>
-
+                <div class="col-6">
+                    <div class="info-box">
+                        <div>👁️</div>
+                        <p>Visibility</p>
+                        <h5>{{ (weather.visibility / 1000)|round }} km</h5>
                     </div>
-
-
-                    <div class="col-6">
-
-                        <div class="info-box">
-
-                            <div class="info-icon">
-                                🧭
-                            </div>
-
-                            <p>
-                                Pressure
-                            </p>
-
-                            <h5>
-                                {{ weather.pressure }}
-                                hPa
-                            </h5>
-
-                        </div>
-
-                    </div>
-
-
                 </div>
 
+                <div class="col-6">
+                    <div class="info-box">
+                        <div>🌡️</div>
+                        <p>Feels Like</p>
+                        <h5>{{ weather.feels_like|round }}°C</h5>
+                    </div>
+                </div>
 
-                <!-- AQI -->
+                <div class="col-6">
+                    <div class="info-box">
+                        <div>🧭</div>
+                        <p>Pressure</p>
+                        <h5>{{ weather.pressure }} hPa</h5>
+                    </div>
+                </div>
 
-                <div class="row g-3 text-center mt-1">
-
-                    <div class="col-12">
-
-                        <div class="info-box">
-
-                            <div class="info-icon">
-                                🌿
-                            </div>
-
-                            <p>
-                                Air Quality
-                            </p>
-
-
-                            {% if aqi %}
-
-                                {% if aqi.aqi == 1 %}
-
-                                    <h5>
-                                        🟢 Good
-                                    </h5>
-
-                                {% elif aqi.aqi == 2 %}
-
-                                    <h5>
-                                        🔵 Fair
-                                    </h5>
-
-                                {% elif aqi.aqi == 3 %}
-
-                                    <h5>
-                                        🟡 Moderate
-                                    </h5>
-
-                                {% elif aqi.aqi == 4 %}
-
-                                    <h5>
-                                        🔴 Poor
-                                    </h5>
-
-                                {% elif aqi.aqi == 5 %}
-
-                                    <h5>
-                                        ⚫ Very Poor
-                                    </h5>
-
-                                {% else %}
-
-                                    <h5>
-                                        N/A
-                                    </h5>
-
-                                {% endif %}
-
-                            {% else %}
-
-                                <h5>
-                                    N/A
-                                </h5>
-
+                <div class="col-6">
+                    <div class="info-box">
+                        <div>🌿</div>
+                        <p>Air Quality</p>
+                        {% if aqi %}
+                            {% if aqi.aqi == 1 %}<h5 class="text-success">🟢 Good</h5>
+                            {% elif aqi.aqi == 2 %}<h5 class="text-info">🔵 Fair</h5>
+                            {% elif aqi.aqi == 3 %}<h5 class="text-warning">🟡 Moderate</h5>
+                            {% elif aqi.aqi == 4 %}<h5 class="text-danger">🔴 Poor</h5>
+                            {% elif aqi.aqi == 5 %}<h5 class="text-danger">⚫ Very Poor</h5>
+                            {% else %}<h5>N/A</h5>
                             {% endif %}
-
-                        </div>
-
+                        {% else %}
+                            <h5>N/A</h5>
+                        {% endif %}
                     </div>
-
                 </div>
-
-
-                <hr>
-
-
-                <!-- SUN -->
-
-                <h4>
-                    🌅 Sun Information
-                </h4>
-
-
-                <div class="row text-center mt-3">
-
-                    <div class="col-6">
-
-                        <div class="info-box">
-
-                            ☀️
-
-                            <p>
-                                Sunrise
-                            </p>
-
-                            <h5>
-                                {{ weather.sunrise.strftime("%I:%M %p") }}
-                            </h5>
-
-                        </div>
-
-                    </div>
-
-
-                    <div class="col-6">
-
-                        <div class="info-box">
-
-                            🌇
-
-                            <p>
-                                Sunset
-                            </p>
-
-                            <h5>
-                                {{ weather.sunset.strftime("%I:%M %p") }}
-                            </h5>
-
-                        </div>
-
-                    </div>
-
-                </div>
-
-
             </div>
 
-            {% endif %}
+            <hr>
+            <h4>🌅 Sun Information</h4>
 
+            <div class="row text-center mt-3">
+                <div class="col-6">
+                    ☀️
+                    <p>Sunrise</p>
+                    <h5>{{ weather.sunrise.strftime("%I:%M %p") }}</h5>
+                </div>
+                <div class="col-6">
+                    🌇
+                    <p>Sunset</p>
+                    <h5>{{ weather.sunset.strftime("%I:%M %p") }}</h5>
+                </div>
+            </div>
         </div>
 
-
-        <!-- =========================
-             RIGHT COLUMN
-        ========================= -->
-
-        <div class="col-lg-7">
-
-
-            <!-- =========================
-                 5 DAY FORECAST
-            ========================= -->
-
-            {% if forecast %}
-
-            <div class="forecast-card">
-
-                <h2>
-                    📅 5-Day Forecast
-                </h2>
-
-
-                <div class="forecast-grid">
-
-
-                    {% for day in forecast %}
-
-                    <div class="day-card">
-
-
-                        <h5>
-                            {{ day.date.strftime("%A") }}
-                        </h5>
-
-
-                        <img
-                            src="https://openweathermap.org/img/wn/{{ day.icon }}@2x.png"
-                            alt="{{ day.description }}">
-
-
-                        <p class="text-capitalize">
-
-                            {{ day.description }}
-
-                        </p>
-
-
-                        <!-- MAX -->
-
-                        <strong>
-
-                            <span
-                                class="forecast-max"
-                                data-celsius="{{ day.temp_max }}">
-
-                                {{ day.temp_max|round }}
-
-                            </span>
-
-                            °C
-
-                        </strong>
-
-
-                        <!-- MIN -->
-
-                        <small>
-
-                            Low
-
-                            <span
-                                class="forecast-min"
-                                data-celsius="{{ day.temp_min }}">
-
-                                {{ day.temp_min|round }}
-
-                            </span>
-
-                            °C
-
-                        </small>
-
-
-                        <!-- RAIN -->
-
-                        <div class="rain-info">
-
-                            🌧️
-
-                            {{ day["pop"]|round }}%
-
-                        </div>
-
-
-                    </div>
-
-                    {% endfor %}
-
-
-                </div>
-
+        <div id="favoritesCard" class="card mt-4 mb-4 shadow" style="display:none;">
+            <div class="card-body">
+                <h5>⭐ Favorite Cities</h5>
+                <div id="favoriteCities"></div>
             </div>
+        </div>
+    </div>
 
-            {% endif %}
+    <!-- Forecast and chart -->
+    <div class="col-lg-7">
+        {% if forecast %}
+        <div class="forecast-card">
+            <h2 class="mb-4">📅 5-Day Forecast</h2>
 
+            <div class="forecast-grid">
+                {% for day in forecast %}
+                <div class="day-card">
+                    <h5>{{ day.date.strftime("%A") }}</h5>
 
-            <!-- =========================
-                 HOURLY CHART
-            ========================= -->
+                    <img src="https://openweathermap.org/img/wn/{{ day.icon }}@2x.png" alt="Forecast icon">
+
+                    <p class="text-capitalize">{{ day.description }}</p>
+
+                    <strong>
+                        <span class="forecast-max" data-celsius="{{ day.temp_max }}">{{ day.temp_max|round }}</span>°C
+                    </strong>
+
+                    <br>
+
+                    <small>
+                        Low <span class="forecast-min" data-celsius="{{ day.temp_min }}">{{ day.temp_min|round }}</span>°C
+                    </small>
+
+                    <br>
+
+                    <small>🌧️ {{ day["pop"]|round }}%</small>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+        {% endif %}
+
+        <div class="forecast-card mt-4">
+            <h2 class="mb-4">📈 Hourly Temperature</h2>
 
             {% if hourly %}
-
-            <div class="forecast-card hourly-card">
-
-                <h2>
-                    📈 Hourly Temperature
-                </h2>
-
                 <div class="chart-container">
-
-                    <canvas
-                        id="hourlyChart">
-                    </canvas>
-
+                    <canvas id="hourlyChart"></canvas>
                 </div>
-
-            </div>
-
-
-            <script>
-
-                const hourlyData = [
-
-                    {% for hour in hourly %}
-
-                    {
-                        time: "{{ hour.time.strftime('%I %p') }}",
-                        temp: {{ hour.temp }}
-                    }
-
-                    {% if not loop.last %},{% endif %}
-
-                    {% endfor %}
-
-                ];
-
-            </script>
-
             {% else %}
-
-            <script>
-
-                const hourlyData = [];
-
-            </script>
-
+                <p class="text-white">Hourly temperature data is unavailable.</p>
             {% endif %}
-
-
         </div>
-
     </div>
+</div>
+{% endif %}
 
 </div>
 
-
-<!-- Chart.js -->
-
-<script
-    src="https://cdn.jsdelivr.net/npm/chart.js">
+<script>
+    const hourlyData = [
+        {% if hourly %}
+            {% for hour in hourly %}
+            {
+                time: "{{ hour.time.strftime('%I %p') }}",
+                temp: {{ hour.temp|float }}
+            }{% if not loop.last %},{% endif %}
+            {% endfor %}
+        {% endif %}
+    ];
 </script>
 
-
-<!-- Our JavaScript -->
-
-<script
-    src="{{ url_for('static', filename='script.js') }}">
-</script>
-
-
-<script
-    src="{{ url_for('static', filename='chart.js') }}">
-</script>
-
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script src="{{ url_for('static', filename='chart.js') }}"></script>
+<script src="{{ url_for('static', filename='script.js') }}"></script>
 
 </body>
-
 </html>
